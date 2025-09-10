@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'rizzchat-master',
-  description: 'Generated with manual setup',
+  title: 'Rizz恋爱助理 - 撩人话术与感情加温',
+  description: '高情商聊天、暧昧升级与走心回复建议，让Ta对你心动。',
   icons: {
     icon: '/favicon.svg'
   }
@@ -16,7 +16,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body className={inter.className}>{children}</body>
     </html>
   )
