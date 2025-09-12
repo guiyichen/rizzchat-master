@@ -11,7 +11,11 @@
     "postinstall": "next telemetry disable || true"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@prisma/client": "^6.16.0",
     "next": "^14.2.5",
+    "next-auth": "^4.24.11",
+    "prisma": "^6.16.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

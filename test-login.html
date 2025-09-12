@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试登录功能</title>
+</head>
+<body>
+    <h1>测试Gmail登录功能</h1>
+    <button onclick="testLogin()">测试登录弹窗</button>
+    <button onclick="testAPI()">测试API</button>
+    
+    <script>
+        function testLogin() {
+            // 模拟点击登录按钮
+            console.log('测试登录按钮点击');
+            // 这里应该触发登录弹窗
+        }
+        
+        function testAPI() {
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [{ role: 'user', content: '测试消息' }]
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('API响应:', data);
+            })
+            .catch(error => {
+                console.error('API错误:', error);
+            });
+        }
+    </script>
+</body>
+</html>

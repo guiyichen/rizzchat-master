@@ -6,6 +6,8 @@ type ClientMessage = {
 }
 
 export async function POST(req: Request) {
+  // 注意：在Edge Runtime中，我们无法使用NextAuth的getServerSession
+  // 这里我们依赖前端的认证检查，实际生产环境中建议使用其他认证方式
   try {
     const apiKey = process.env.OPENAI_API_KEY
     if (!apiKey || apiKey === 'sk-test123') {

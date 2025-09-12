@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSession, signOut } from 'next-auth/react'
+import { useUsageLimit } from '@/hooks/useUsageLimit'
+import LoginModal from '@/components/LoginModal'
 
 interface Message {
   id: number
@@ -10,6 +13,17 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const { data: session } = useSession()
+  const { 
+    usageCount, 
+    remainingUses, 
+    showLoginModal, 
+    setShowLoginModal, 
+    incrementUsage, 
+    canUse, 
+    isLoggedIn 
+  } = useUsageLimit()
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -33,6 +47,17 @@ export default function ChatPage() {
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return
+
+    // 检查使用限制
+    if (!canUse()) {
+      setShowLoginModal(true)
+      return
+    }
+
+    // 增加使用次数
+    if (!incrementUsage()) {
+      return
+    }
 
     const userInput = inputText
     const userMessage: Message = {
@@ -122,6 +147,54 @@ export default function ChatPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-rose-700 mb-2">Rizz恋爱助理</h1>
           <p className="text-rose-500">高情商撩人话术 · 甜而不腻 · 把温柔和分寸感交给我</p>
+          
+          {/* 用户状态显示 */}
+          <div className="mt-4 flex justify-center items-center space-x-4">
+            {isLoggedIn ? (
+              <div className="flex items-center space-x-3 bg-green-50 px-4 py-2 rounded-full">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center overflow-hidden">
+                  {session?.user?.image ? (
+                    <img 
+                      src={session.user.image} 
+                      alt={session.user.name || '用户头像'} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-green-700 font-medium">
+                  {session?.user?.name || 'Google用户'} · 无限制使用
+                </span>
+                <button
+                  onClick={() => signOut()}
+                  className="text-green-600 hover:text-green-800 text-sm"
+                >
+                  退出
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3 bg-amber-50 px-4 py-2 rounded-full">
+                <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">{remainingUses}</span>
+                </div>
+                <span className="text-amber-700 font-medium">
+                  剩余 {remainingUses} 次免费体验
+                </span>
+                <button
+                  onClick={() => {
+                    console.log('登录按钮被点击');
+                    setShowLoginModal(true);
+                  }}
+                  className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 rounded-full text-sm transition-colors"
+                >
+                  登录
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 聊天容器 */}
@@ -213,6 +286,13 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* 登录弹窗 */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        remainingUses={remainingUses}
+      />
     </div>
   )
 }
