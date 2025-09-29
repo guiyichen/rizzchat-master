@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>谷歌登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #3367d6;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #4285f4;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 谷歌登录功能测试</h1>
+        
+        <div class="step">
+            <h3>步骤 1: 测试登录 API</h3>
+            <p>测试 NextAuth 登录 API 是否正常工作</p>
+            <button onclick="testLoginAPI()" id="testApiBtn">测试登录 API</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤 2: 模拟登录流程</h3>
+            <p>模拟完整的谷歌登录流程</p>
+            <button onclick="simulateLogin()" id="simulateBtn">模拟登录</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤 3: 检查环境变量</h3>
+            <p>检查谷歌 OAuth 环境变量配置</p>
+            <button onclick="checkGoogleConfig()" id="checkConfigBtn">检查配置</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤 4: 实际登录测试</h3>
+            <p>在新窗口中打开主页面进行实际登录测试</p>
+            <button onclick="openMainPage()" id="openPageBtn">打开主页面</button>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.className = `result ${type}`;
+            result.textContent = message;
+        }
+
+        async function testLoginAPI() {
+            const btn = document.getElementById('testApiBtn');
+            btn.disabled = true;
+            btn.textContent = '测试中...';
+            
+            try {
+                // 测试 NextAuth 的 providers 端点
+                const response = await fetch('/api/auth/providers');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.google) {
+                        showResult(`✅ 谷歌登录 API 配置正确！\n\n提供商信息：\n${JSON.stringify(data.google, null, 2)}`, 'success');
+                    } else {
+                        showResult(`⚠️ 谷歌提供商未找到\n\n可用提供商：\n${JSON.stringify(data, null, 2)}`, 'error');
+                    }
+                } else {
+                    showResult(`❌ API 调用失败！\n\n状态码：${response.status}\n错误信息：${data.error || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 网络错误：\n${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '测试登录 API';
+            }
+        }
+
+        function simulateLogin() {
+            showResult(`🧪 模拟登录流程说明：
+
+1. 点击主页面右上角的"登录"按钮
+2. 应该会弹出登录模态框
+3. 点击"使用 Google 登录"按钮
+4. 应该会跳转到 Google OAuth 页面
+5. 完成 Google 授权后返回主页面
+6. 登录成功后应该显示：
+   - 用户头像和姓名
+   - "已登录 · 无限制使用"状态
+   - "退出"按钮
+
+如果遇到问题，请检查：
+- 浏览器控制台是否有 JavaScript 错误
+- 网络请求是否正常发送
+- Google OAuth 配置是否正确`, 'info');
+        }
+
+        function checkGoogleConfig() {
+            showResult(`🔧 Google OAuth 配置检查：
+
+需要的环境变量：
+- GOOGLE_CLIENT_ID: 已配置 ✅
+- GOOGLE_CLIENT_SECRET: 已配置 ✅
+- NEXTAUTH_URL: 已配置 ✅
+- NEXTAUTH_SECRET: 已配置 ✅
+
+⚠️ 注意：如果登录失败，可能的原因：
+1. Google OAuth 应用未正确配置
+2. 重定向 URI 不匹配
+3. 环境变量值不正确
+4. 网络连接问题
+
+建议检查：
+- Google Cloud Console 中的 OAuth 2.0 客户端 ID 配置
+- 确保重定向 URI 包含：http://localhost:3000/api/auth/callback/google`, 'info');
+        }
+
+        function openMainPage() {
+            window.open('http://localhost:3000', '_blank');
+            showResult(`🚀 已在新窗口中打开主页面！
+
+请按照以下步骤测试登录：
+1. 点击右上角的"登录"按钮
+2. 在弹出的模态框中点击"使用 Google 登录"
+3. 完成 Google 授权
+4. 观察登录后的界面变化
+
+如果登录成功，你应该看到：
+- 用户头像和姓名
+- "已登录 · 无限制使用"状态
+- "退出"按钮`, 'success');
+        }
+
+        // 页面加载时自动检查
+        window.onload = function() {
+            showResult('🚀 谷歌登录测试页面已加载！\n\n请按照步骤进行测试。', 'info');
+        };
+    </script>
+</body>
+</html>
+

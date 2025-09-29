@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useUsageLimit } from '@/hooks/useUsageLimit'
 import LoginModal from '@/components/LoginModal'
+import PaymentModal from '@/components/PaymentModal'
 
 interface Message {
   id: number
@@ -23,6 +24,8 @@ export default function ChatPage() {
     canUse, 
     isLoggedIn 
   } = useUsageLimit()
+
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -183,15 +186,23 @@ export default function ChatPage() {
                 <span className="text-amber-700 font-medium">
                   剩余 {remainingUses} 次免费体验
                 </span>
-                <button
-                  onClick={() => {
-                    console.log('登录按钮被点击');
-                    setShowLoginModal(true);
-                  }}
-                  className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 rounded-full text-sm transition-colors"
-                >
-                  登录
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      console.log('登录按钮被点击');
+                      setShowLoginModal(true);
+                    }}
+                    className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 rounded-full text-sm transition-colors"
+                  >
+                    登录
+                  </button>
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full text-sm transition-colors"
+                  >
+                    升级
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -292,6 +303,12 @@ export default function ChatPage() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         remainingUses={remainingUses}
+      />
+
+      {/* 支付弹窗 */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
       />
     </div>
   )

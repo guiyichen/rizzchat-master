@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   title: 'Rizz恋爱助理 - 撩人话术与感情加温',
   description: '高情商聊天、暧昧升级与走心回复建议，让Ta对你心动。',
   icons: {
-    icon: '/favicon.svg'
+    icon: '/favicon.png',
+    shortcut: '/favicon.ico'
   }
 }
 

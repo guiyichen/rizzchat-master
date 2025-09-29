@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #c2185b;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #e91e63;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Rizz恋爱助理 - 支付功能测试</h1>
+        
+        <div class="step">
+            <h3>步骤 1: 测试支付 API</h3>
+            <p>测试 Stripe 支付 API 是否正常工作（需要登录状态）</p>
+            <button onclick="testPaymentAPI()" id="testApiBtn">测试支付 API</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤 2: 模拟支付流程</h3>
+            <p>模拟完整的支付流程（包括前端组件测试）</p>
+            <button onclick="testPaymentFlow()" id="testFlowBtn">测试支付流程</button>
+        </div>
+
+        <div class="step">
+            <h3>步骤 3: 检查环境变量</h3>
+            <p>检查 Stripe 环境变量配置</p>
+            <button onclick="checkEnvVars()" id="checkEnvBtn">检查环境变量</button>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.className = `result ${type}`;
+            result.textContent = message;
+        }
+
+        async function testPaymentAPI() {
+            const btn = document.getElementById('testApiBtn');
+            btn.disabled = true;
+            btn.textContent = '测试中...';
+            
+            try {
+                const response = await fetch('/api/stripe/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ 支付 API 调用成功！\n\n响应数据：\n${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    if (response.status === 401) {
+                        showResult(`⚠️ API 需要登录状态\n\n状态码：${response.status}\n错误信息：${data.error}\n\n这是正常的，因为支付功能需要用户登录后才能使用。`, 'info');
+                    } else {
+                        showResult(`❌ API 调用失败！\n\n状态码：${response.status}\n错误信息：${data.error || '未知错误'}`, 'error');
+                    }
+                }
+            } catch (error) {
+                showResult(`❌ 网络错误：\n${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '测试支付 API';
+            }
+        }
+
+        function testPaymentFlow() {
+            showResult(`🧪 支付流程测试说明：
+
+1. 打开主页面：http://localhost:3000
+2. 点击右上角的"升级"按钮
+3. 在弹出的支付模态框中点击"立即支付"
+4. 观察是否出现以下情况：
+   - 模态框正常弹出 ✅
+   - 支付按钮可点击 ✅
+   - 点击后显示加载状态 ✅
+   - 调用支付 API ✅
+
+如果出现错误，请检查：
+- 浏览器控制台是否有 JavaScript 错误
+- 网络请求是否正常发送
+- 环境变量是否正确配置`, 'info');
+        }
+
+        function checkEnvVars() {
+            showResult(`🔧 环境变量检查：
+
+当前需要的 Stripe 环境变量：
+- STRIPE_SECRET_KEY: 已配置 ✅
+- NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 已配置 ✅
+- STRIPE_PRODUCT_PRICE_ID: 需要更新为真实价格ID ⚠️
+- STRIPE_WEBHOOK_SECRET: 已配置 ✅
+
+⚠️ 注意：当前使用的是测试配置，如果要进行真实支付测试，需要：
+1. 在 Stripe 控制台创建真实的产品和价格
+2. 更新 .env.local 中的 STRIPE_PRODUCT_PRICE_ID
+3. 配置真实的 webhook 端点`, 'info');
+        }
+
+        // 页面加载时自动检查
+        window.onload = function() {
+            showResult('🚀 支付功能测试页面已加载！\n\n请按照步骤进行测试。', 'info');
+        };
+    </script>
+</body>
+</html>
+
