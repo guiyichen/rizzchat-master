@@ -1,35 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>测试登录功能</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #3367d6;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
 </head>
 <body>
-    <h1>测试Gmail登录功能</h1>
-    <button onclick="testLogin()">测试登录弹窗</button>
-    <button onclick="testAPI()">测试API</button>
+    <div class="container">
+        <h1>🔐 Gmail登录测试</h1>
+        
+        <div class="status info">
+            <strong>测试说明：</strong><br>
+            1. 点击下面的按钮测试Gmail登录<br>
+            2. 登录成功后会自动重定向回此页面<br>
+            3. 检查数据库是否保存了用户信息
+        </div>
+        
+        <a href="/api/auth/signin/google" class="btn">
+            🚀 使用Gmail登录
+        </a>
+        
+        <button onclick="mockLogin()" class="btn" style="background: #28a745; margin-left: 10px;">
+            🧪 模拟登录测试
+        </button>
+        
+        <div style="margin-top: 30px;">
+            <h3>📊 测试步骤：</h3>
+            <ol>
+                <li>点击"使用Gmail登录"按钮</li>
+                <li>在Google登录页面输入您的Gmail账号</li>
+                <li>授权应用访问您的信息</li>
+                <li>登录成功后返回此页面</li>
+                <li>运行数据库查询脚本验证用户信息是否保存</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>🔍 验证方法：</h3>
+            <p>在终端中运行以下命令检查数据库：</p>
+            <code style="background: #f8f9fa; padding: 10px; display: block; border-radius: 3px;">
+                export DATABASE_URL="postgresql://root:9Xl3bTpdCL5f2sIBx6kN0V8GJ174ewHy@sjc1.clusters.zeabur.com:32695/zeabur"<br>
+                node test-auth.js
+            </code>
+        </div>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
     
     <script>
-        function testLogin() {
-            // 模拟点击登录按钮
-            console.log('测试登录按钮点击');
-            // 这里应该触发登录弹窗
-        }
-        
-        function testAPI() {
-            fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [{ role: 'user', content: '测试消息' }]
-                })
-            })
-            .then(response => response.text())
-            .then(data => {
-                console.log('API响应:', data);
-            })
-            .catch(error => {
-                console.error('API错误:', error);
-            });
+        async function mockLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="status info">🔄 正在执行模拟登录...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/mock-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: '测试用户',
+                        email: 'test@example.com',
+                        image: 'https://via.placeholder.com/150'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="status success">
+                            <strong>✅ 模拟登录成功！</strong><br>
+                            用户ID: ${data.user.id}<br>
+                            姓名: ${data.user.name}<br>
+                            邮箱: ${data.user.email}<br>
+                            头像: ${data.user.image}<br>
+                            <br>
+                            <strong>📊 数据库存储成功</strong><br>
+                            会话令牌: ${data.session.token.substring(0, 20)}...<br>
+                            过期时间: ${new Date(data.session.expires).toLocaleString()}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status error">
+                            <strong>❌ 模拟登录失败</strong><br>
+                            错误: ${data.error}<br>
+                            详情: ${data.details}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ 请求失败</strong><br>
+                        错误: ${error.message}
+                    </div>
+                `;
+            }
         }
     </script>
 </body>
