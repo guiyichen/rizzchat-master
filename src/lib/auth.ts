@@ -45,7 +45,7 @@ export const authOptions = {
       }
       return session
     },
-    async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
+    async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
       // 确保获取完整的用户信息
       if (account?.provider === "google") {
         user.name = profile?.name || user.name
