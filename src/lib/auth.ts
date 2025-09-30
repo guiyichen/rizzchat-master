@@ -11,20 +11,19 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // 使用离线配置避免网络超时
-      issuer: "https://accounts.google.com",
+      // 生产环境优化配置
       authorization: {
-        url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
+          response_type: "code",
+          scope: "openid email profile"
         }
       },
-      token: "https://oauth2.googleapis.com/token",
-      userinfo: "https://www.googleapis.com/oauth2/v2/userinfo",
+      // 增加超时时间和重试机制
       httpOptions: {
-        timeout: 30000, // 增加超时时间到30秒
+        timeout: 30000,
+        retry: 3
       }
     }),
   ],
@@ -39,11 +38,23 @@ export const authOptions = {
       return session
     },
     async signIn({ user, account, profile }: { user: any; account: any; profile?: any }) {
+      // 验证必要参数
+      if (!user || !account) {
+        console.error('OAuth回调缺少必要参数:', { user: !!user, account: !!account });
+        return false;
+      }
+
       // 确保获取完整的用户信息
       if (account?.provider === "google") {
         user.name = profile?.name || user.name
         user.email = profile?.email || user.email
         user.image = profile?.picture || user.image
+        
+        // 验证邮箱
+        if (!user.email) {
+          console.error('Google OAuth未返回邮箱信息');
+          return false;
+        }
         
         // 手动保存用户信息到数据库
         try {
@@ -62,8 +73,10 @@ export const authOptions = {
               emailVerified: new Date(),
             },
           });
+          console.log('用户信息保存成功:', user.email);
         } catch (error) {
           console.error('保存用户信息失败:', error);
+          return false;
         }
       }
       return true
