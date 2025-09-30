@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统状态检查</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ddd;
+        }
+        .status-success {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .status-warning {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .links {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 系统状态检查</h1>
+        
+        <div class="status-item" id="server-status">
+            <span>服务器状态</span>
+            <span id="server-status-text">检查中...</span>
+        </div>
+        
+        <div class="status-item" id="auth-status">
+            <span>认证系统</span>
+            <span id="auth-status-text">检查中...</span>
+        </div>
+        
+        <div class="status-item" id="database-status">
+            <span>数据库连接</span>
+            <span id="database-status-text">检查中...</span>
+        </div>
+        
+        <div class="status-item" id="oauth-status">
+            <span>OAuth配置</span>
+            <span id="oauth-status-text">检查中...</span>
+        </div>
+        
+        <div class="links">
+            <a href="/" class="btn">🏠 返回主页</a>
+            <a href="/test-login.html" class="btn btn-success">🧪 测试登录</a>
+            <button onclick="checkAllStatus()" class="btn btn-warning">🔄 重新检查</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        async function checkAllStatus() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="status info">🔄 正在检查系统状态...</div>';
+            resultDiv.className = 'result show';
+            
+            try {
+                // 检查服务器状态
+                await checkServerStatus();
+                
+                // 检查认证系统
+                await checkAuthStatus();
+                
+                // 检查数据库
+                await checkDatabaseStatus();
+                
+                // 检查OAuth
+                await checkOAuthStatus();
+                
+                resultDiv.innerHTML = '<div class="status success">✅ 所有检查完成</div>';
+                resultDiv.className = 'result show success';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ 检查失败: ${error.message}</div>`;
+                resultDiv.className = 'result show error';
+            }
+        }
+        
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/');
+                if (response.ok) {
+                    document.getElementById('server-status').className = 'status-item status-success';
+                    document.getElementById('server-status-text').textContent = '✅ 正常运行';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('server-status').className = 'status-item status-error';
+                document.getElementById('server-status-text').textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+        
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/session');
+                if (response.ok) {
+                    document.getElementById('auth-status').className = 'status-item status-success';
+                    document.getElementById('auth-status-text').textContent = '✅ 认证系统正常';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('auth-status').className = 'status-item status-error';
+                document.getElementById('auth-status-text').textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+        
+        async function checkDatabaseStatus() {
+            try {
+                const response = await fetch('/api/auth/mock-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: '状态检查',
+                        email: 'status@check.com',
+                        image: 'https://via.placeholder.com/150'
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('database-status').className = 'status-item status-success';
+                    document.getElementById('database-status-text').textContent = '✅ 数据库连接正常';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('database-status').className = 'status-item status-error';
+                document.getElementById('database-status-text').textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+        
+        async function checkOAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/providers');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.google) {
+                        document.getElementById('oauth-status').className = 'status-item status-success';
+                        document.getElementById('oauth-status-text').textContent = '✅ Google OAuth已配置';
+                    } else {
+                        document.getElementById('oauth-status').className = 'status-item status-warning';
+                        document.getElementById('oauth-status-text').textContent = '⚠️ OAuth配置可能有问题';
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('oauth-status').className = 'status-item status-error';
+                document.getElementById('oauth-status-text').textContent = `❌ 错误: ${error.message}`;
+            }
+        }
+        
+        // 页面加载时自动检查
+        window.onload = checkAllStatus;
+    </script>
+</body>
+</html>
