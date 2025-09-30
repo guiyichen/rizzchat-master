@@ -20,10 +20,9 @@ export const authOptions = {
           scope: "openid email profile"
         }
       },
-      // 增加超时时间和重试机制
+      // 增加超时时间
       httpOptions: {
-        timeout: 30000,
-        retry: 3
+        timeout: 30000
       }
     }),
   ],
